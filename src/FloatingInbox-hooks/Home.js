@@ -1,41 +1,45 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ethers } from "ethers";
 import { Client, useClient } from "@xmtp/react-sdk";
 import { ConversationContainer } from "./ConversationContainer";
 
 export default function Home({ wallet, env, isPWA = false, onLogout }) {
-  const initialIsOpen =
-    isPWA || localStorage.getItem("isWidgetOpen") === "true" || false;
+  const [isOpen, setIsOpen] = useState(false);
+  const [isOnNetwork, setIsOnNetwork] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
 
-  const initialIsOnNetwork =
-    localStorage.getItem("isOnNetwork") === "true" || false;
-  const initialIsConnected =
-    (localStorage.getItem("isConnected") && wallet === "true") || false;
+  useEffect(() => {
+    const initialIsOpen =
+      isPWA || localStorage.getItem("isWidgetOpen") === "true" || false;
+    const initialIsOnNetwork =
+      localStorage.getItem("isOnNetwork") === "true" || false;
+    const initialIsConnected =
+      (localStorage.getItem("isConnected") && wallet === "true") || false;
+
+    setIsOpen(initialIsOpen);
+    setIsOnNetwork(initialIsOnNetwork);
+    setIsConnected(initialIsConnected);
+  }, []);
 
   const { client, error, isLoading, initialize } = useClient();
   const [loading, setLoading] = useState(false);
-
-  const [isOpen, setIsOpen] = useState(initialIsOpen);
-  const [isOnNetwork, setIsOnNetwork] = useState(initialIsOnNetwork);
-  const [isConnected, setIsConnected] = useState(initialIsConnected);
 
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [signer, setSigner] = useState();
 
   const styles = {
-    floatingLogo: {
+    FloatingLogo: {
       position: "fixed",
       bottom: "20px",
       right: "20px",
-      width: "30px",
-      height: "30px",
+      width: "40px",
+      height: "40px",
       borderRadius: "50%",
       backgroundColor: "white",
       display: "flex",
       alignItems: "center",
       border: "1px solid #ccc",
       justifyContent: "center",
-      boxShadow: "0 2px 10px #ccc",
       cursor: "pointer",
       transition: "transform 0.3s ease",
       padding: "5px",
@@ -49,7 +53,6 @@ export default function Home({ wallet, env, isPWA = false, onLogout }) {
       border: isPWA == true ? "0px" : "1px solid #ccc",
       backgroundColor: "#f9f9f9",
       borderRadius: isPWA == true ? "0px" : "10px",
-      boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
       zIndex: "1000",
       overflow: "hidden",
       display: "flex",
@@ -67,7 +70,7 @@ export default function Home({ wallet, env, isPWA = false, onLogout }) {
       cursor: "pointer",
     },
     widgetHeader: {
-      padding: "5px",
+      padding: "2px",
     },
     conversationHeader: {
       display: "flex",
@@ -121,6 +124,7 @@ export default function Home({ wallet, env, isPWA = false, onLogout }) {
 
   useEffect(() => {
     if (wallet) {
+      console.log(wallet);
       setSigner(wallet);
       setIsConnected(true);
     }
@@ -138,6 +142,7 @@ export default function Home({ wallet, env, isPWA = false, onLogout }) {
         await window.ethereum.enable();
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         setSigner(provider.getSigner());
+        console.log(provider.getSigner());
         setIsConnected(true);
       } catch (error) {
         console.error("User rejected request", error);
@@ -152,12 +157,19 @@ export default function Home({ wallet, env, isPWA = false, onLogout }) {
       if (signer && typeof signer.getAddress === "function") {
         return await signer.getAddress();
       }
+      if (signer && typeof signer.getAddresses === "function") {
+        //viem
+        const [address] = await signer.getAddresses();
+        return address;
+      }
       return null;
     } catch (e) {
       console.log(e);
     }
   };
-
+  if (error) {
+    console.log(error);
+  }
   const initXmtpWithKeys = async () => {
     const options = {
       env: env ? env : getEnv(),
@@ -184,10 +196,13 @@ export default function Home({ wallet, env, isPWA = false, onLogout }) {
   const closeWidget = () => {
     setIsOpen(false);
   };
-  window.FloatingInbox = {
-    open: openWidget,
-    close: closeWidget,
-  };
+
+  if (typeof window !== "undefined") {
+    window.FloatingInbox = {
+      open: openWidget,
+      close: closeWidget,
+    };
+  }
   const handleLogout = async () => {
     setIsConnected(false);
     const address = await getAddress(signer);
@@ -204,22 +219,20 @@ export default function Home({ wallet, env, isPWA = false, onLogout }) {
 
   return (
     <>
-      {!isPWA && (
-        <div
-          style={styles.floatingLogo}
-          onClick={isOpen ? closeWidget : openWidget}
-          className={
-            "FloatingInbox " +
-            (isOpen ? "spin-clockwise" : "spin-counter-clockwise")
-          }
-        >
-          <SVGLogo parentClass={"FloatingInbox"} />
-        </div>
-      )}
+      <div
+        onClick={isOpen ? closeWidget : openWidget}
+        className={
+          "FloatingInbox " +
+          (isOpen ? "spin-clockwise" : "spin-counter-clockwise")
+        }
+        style={styles.FloatingLogo}
+      >
+        💬
+      </div>
       {isOpen && (
         <div
           style={styles.uContainer}
-          className={"FloatingInbox" + (isOnNetwork ? "expanded" : "")}
+          className={" " + (isOnNetwork ? "expanded" : "")}
         >
           {isConnected && (
             <button style={styles.logoutBtn} onClick={handleLogout}>
@@ -274,50 +287,6 @@ export default function Home({ wallet, env, isPWA = false, onLogout }) {
   );
 }
 
-function SVGLogo({ parentClass, size, theme }) {
-  const color =
-    theme === "dark" ? "#fc4f37" : theme === "light" ? "#fc4f37" : "#fc4f37";
-
-  const hoverColor =
-    theme === "dark" ? "#fff" : theme === "light" ? "#000" : "#000";
-
-  const uniqueClassLogo = `logo-${Math.random().toString(36).substr(2, 9)}`;
-
-  const logoStyles = {
-    container: {
-      width: "100%",
-    },
-    logo: `
-        .${uniqueClassLogo} {
-          transition: transform 0.5s ease;
-        }
-        .${parentClass}:hover .${uniqueClassLogo} {
-          transform: rotate(360deg);
-        }
-  
-        .${parentClass}:hover .${uniqueClassLogo} path {
-          fill: ${hoverColor};
-        }
-      `,
-  };
-
-  return (
-    <>
-      <style>{logoStyles.logo}</style>
-      <svg
-        className={"logo " + uniqueClassLogo}
-        style={logoStyles.container}
-        viewBox="0 0 462 462"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          fill={color}
-          d="M1 231C1 103.422 104.422 0 232 0C359.495 0 458 101.5 461 230C461 271 447 305.5 412 338C382.424 365.464 332 369.5 295.003 349C268.597 333.767 248.246 301.326 231 277.5L199 326.5H130L195 229.997L132 135H203L231.5 184L259.5 135H331L266 230C266 230 297 277.5 314 296C331 314.5 362 315 382 295C403.989 273.011 408.912 255.502 409 230C409.343 131.294 330.941 52 232 52C133.141 52 53 132.141 53 231C53 329.859 133.141 410 232 410C245.674 410 258.781 408.851 271.5 406L283.5 456.5C265.401 460.558 249.778 462 232 462C104.422 462 1 358.578 1 231Z"
-        />
-      </svg>
-    </>
-  );
-}
 const ENCODING = "binary";
 
 export const getEnv = () => {

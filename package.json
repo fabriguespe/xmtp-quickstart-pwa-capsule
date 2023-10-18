@@ -4,32 +4,25 @@
   "private": true,
   "start_url": "/",
   "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
-    "test": "react-app-rewired test"
+    "start": " craco start",
+    "start:gated": " REACT_APP_GATED=true craco start",
+    "build": "craco build",
+    "serve-build": " serve -s build",
+    "deploy-beta": "yarn && yarn build && aws s3 sync build/ s3://capsule-beta-example --acl public-read --profile beta"
   },
   "peerDependencies": {
     "react": ">=16.0.0",
     "react-dom": ">=16.0.0"
   },
   "dependencies": {
-    "@usecapsule/web-sdk": "^0.26.0",
+    "@usecapsule/web-sdk": "0.25.0",
     "@xmtp/react-sdk": "^1.4.0",
-    "axios": "^1.5.0",
     "buffer": "^6.0.3",
-    "crypto": "^1.0.1",
-    "crypto-browserify": "^3.12.0",
-    "date-fns": "^2.30.0",
     "ethers": "^5.7.0",
-    "npm": "^10.2.0",
-    "react": ">=16.0.0",
-    "react-dom": ">=16.0.0",
-    "react-markdown": "^8.0.7",
-    "react-scripts": "5.0.1",
-    "stream": "^0.0.2",
-    "stream-browserify": "^3.0.0",
-    "styled-components": "^6.0.8",
-    "typescript": "^4.9.5"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "^5.0.1",
+    "webpack": "^5.89.0"
   },
   "eslintConfig": {
     "extends": [
@@ -50,6 +43,7 @@
     ]
   },
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
     "react-app-rewired": "^2.2.1"
   }
 }
