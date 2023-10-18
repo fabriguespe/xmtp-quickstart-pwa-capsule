@@ -69,11 +69,15 @@ function App() {
         );
         let signer = new CapsuleEthersSigner(capsule, provider);
 
-        //If i uncomment this then it works
-        //if (typeof window.ethereum !== "undefined") {
-        //const provider = new ethers.providers.Web3Provider(window.ethereum);
-        // signer = provider.getSigner();
-        //}
+        /* The following commented code is an alternative way to create a signer using the Web3Provider
+         This code is currently commented out, but if uncommented, it will work
+         This code checks if the Ethereum object is injected into the window object, which is done by MetaMask and similar wallets
+         If the Ethereum object is present, a new Web3Provider is created using the Ethereum object
+         The signer is then retrieved from the provider */
+        // if (typeof window.ethereum !== "undefined") {
+        //   const provider = new ethers.providers.Web3Provider(window.ethereum);
+        //   signer = provider.getSigner();
+        // }
         setSigner(signer);
       }
     };
