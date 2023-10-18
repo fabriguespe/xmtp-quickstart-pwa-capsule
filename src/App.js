@@ -67,7 +67,13 @@ function App() {
           CHAIN_PROVIDER,
           CHAIN
         );
-        const signer = new CapsuleEthersSigner(capsule, provider);
+        let signer = new CapsuleEthersSigner(capsule, provider);
+
+        //If i uncomment this then it works
+        //if (typeof window.ethereum !== "undefined") {
+        //const provider = new ethers.providers.Web3Provider(window.ethereum);
+        // signer = provider.getSigner();
+        //}
         setSigner(signer);
       }
     };
